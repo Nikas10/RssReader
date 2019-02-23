@@ -35,9 +35,9 @@ public class ApacheRssReader extends TimerTask implements RssReader {
     private Map<String, RssConfiguration> rssFeeds;
     private String requiredRss;
 
-    public ApacheRssReader(AppConfiguration appConfiguration, String requiredRss) {
-        this.activeConnections = appConfiguration.getActiveConnections();
-        this.rssFeeds = appConfiguration.getRssFeeds();
+    public ApacheRssReader(String requiredRss) {
+        this.activeConnections = AppConfiguration.getActiveConnections();
+        this.rssFeeds = AppConfiguration.getRssFeeds();
         this.requiredRss = requiredRss;
     }
 

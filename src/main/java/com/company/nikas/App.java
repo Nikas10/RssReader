@@ -3,12 +3,14 @@ package com.company.nikas;
 import com.company.nikas.config.AppConfiguration;
 import com.company.nikas.integrations.impl.ApacheRssReader;
 import com.company.nikas.model.RssConfiguration;
-import com.company.nikas.model.consts.RssType;
 import com.company.nikas.system.ActiveStreamMonitor;
+import com.company.nikas.system.processing.impl.RomeRssProcessor;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -25,23 +27,33 @@ public class App
         AppConfiguration appConfiguration = new AppConfiguration();
         Timer timer = new Timer();
         String name = "CNN Top stories";
+        Map<String, String> tags = new HashMap<>();
+        tags.put("title", "getTitle");
+        tags.put("description", "getDescription");
+        tags.put("generator", "getGenerator");
+        tags.put("lastBuildDate", "getLastBuildDate");
+        tags.put("managingEditor", "getManagingEditor");
         RssConfiguration rssConfiguration = new RssConfiguration();
         rssConfiguration.setFilePath("G:\\DISKRELATED\\UNIVER\\git\\RssReader\\target\\x.txt");
         rssConfiguration.setRequestSchedule(1000);
-        rssConfiguration.setRssType(RssType.RSS);
         rssConfiguration.setUrl("http://rss.cnn.com/rss/cnn_topstories.rss");
-        appConfiguration.getRssFeeds().put(name, rssConfiguration);
-        TimerTask rssTest = new ApacheRssReader(appConfiguration, name);
+        rssConfiguration.setActiveTags(tags);
+        AppConfiguration.getRssFeeds().put(name, rssConfiguration);
+
+        TimerTask rssTest = new ApacheRssReader(name);
         System.out.println("scheduling the task");
         timer.schedule(rssTest, rssConfiguration.getRequestSchedule());
-        Thread thread = new Thread(new ActiveStreamMonitor(appConfiguration));
+
+        Thread thread = new Thread(new ActiveStreamMonitor(new RomeRssProcessor()));
         thread.start();
+
         try {
             Thread.sleep(5000);
             logger.info("sleep finished");
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+
         thread.interrupt();
         rssTest.cancel();
         timer.cancel();

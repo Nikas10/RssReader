@@ -1,6 +1,5 @@
 package com.company.nikas.model;
 
-import com.company.nikas.model.consts.RssType;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.deser.std.DateDeserializers;
@@ -15,7 +14,7 @@ import java.util.Map;
 public class RssConfiguration implements Serializable {
 
     private String url;
-    private RssType rssType = RssType.RSS;
+    private String rssType;
     private String filePath;
     private Integer requestSchedule;
 
@@ -24,6 +23,6 @@ public class RssConfiguration implements Serializable {
     private LocalDateTime lastUpdateDate;
 
     private Integer elementsPerRequest;
-    private Map<String, Boolean> activeTags;
+    private Map<String, String> activeTags;
 
 }
