@@ -12,7 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class AppConfiguration implements Serializable {
 
     private Map<String, RssConfiguration> rssFeeds;
-    private Map<String, InputStream> activeConnections;
+    private Map<String, String> activeConnections;
 
     public AppConfiguration() {
         rssFeeds = new ConcurrentHashMap<>();

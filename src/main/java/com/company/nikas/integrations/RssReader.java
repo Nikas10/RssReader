@@ -9,5 +9,5 @@ public interface RssReader {
      * @param url Web URL
      * @return Response from Rss server
      */
-    public InputStream getRssFeed(String url);
+    public String getRssFeed(String url);
 }
