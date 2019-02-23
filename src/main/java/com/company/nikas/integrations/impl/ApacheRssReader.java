@@ -2,6 +2,8 @@ package com.company.nikas.integrations.impl;
 
 import com.company.nikas.exceptions.InvalidResponseException;
 import com.company.nikas.integrations.RssReader;
+import com.company.nikas.config.AppConfiguration;
+import com.company.nikas.model.RssConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpStatus;
@@ -14,15 +16,32 @@ import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Map;
+import java.util.TimerTask;
 
 import static java.util.Objects.isNull;
 
 @Slf4j
-public class ApacheRssReader implements Runnable, RssReader {
+public class ApacheRssReader extends TimerTask implements RssReader {
+
+    private Map<String, InputStream> activeConnections;
+    private Map<String, RssConfiguration> rssFeeds;
+    private String requiredRss;
+
+    public ApacheRssReader(AppConfiguration appConfiguration, String requiredRss) {
+        this.activeConnections = appConfiguration.getActiveConnections();
+        this.rssFeeds = appConfiguration.getRssFeeds();
+        this.requiredRss = requiredRss;
+    }
 
     @Override
     public void run() {
-
+        RssConfiguration rssConfig = rssFeeds.get(requiredRss);
+        if (isNull(rssConfig)) {
+            log.error("RSS configurations for feed {} is not found!", requiredRss);
+            return;
+        }
+        InputStream inputStream = getRssFeed(rssConfig.getUrl());
     }
 
     @Override

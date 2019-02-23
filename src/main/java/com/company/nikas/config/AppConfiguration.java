@@ -1,5 +1,6 @@
-package com.company.nikas.model;
+package com.company.nikas.config;
 
+import com.company.nikas.model.RssConfiguration;
 import lombok.Data;
 
 import java.io.InputStream;
