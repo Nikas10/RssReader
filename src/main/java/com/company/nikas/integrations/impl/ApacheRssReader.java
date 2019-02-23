@@ -41,7 +41,7 @@ public class ApacheRssReader extends TimerTask implements RssReader {
             log.error("RSS configurations for feed {} is not found!", requiredRss);
             return;
         }
-        InputStream inputStream = getRssFeed(rssConfig.getUrl());
+        activeConnections.put(requiredRss, getRssFeed(rssConfig.getUrl()));
     }
 
     @Override
