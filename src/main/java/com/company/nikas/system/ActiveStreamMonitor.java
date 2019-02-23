@@ -4,7 +4,6 @@ import com.company.nikas.config.AppConfiguration;
 import com.company.nikas.exceptions.RssConfigurationNotFoundException;
 import com.company.nikas.model.RssConfiguration;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
@@ -48,7 +47,8 @@ public class ActiveStreamMonitor implements Runnable {
     }
 
     private void processStreams() {
-        for (String feed: activeConnections.keySet()) {
+        activeConnections.entrySet().parallelStream().forEach(entry -> {
+            String feed = entry.getKey();
             try {
                 checkConfigurationPresense(feed);
                 RssConfiguration rssConfiguration = rssFeeds.get(feed);
@@ -60,7 +60,7 @@ public class ActiveStreamMonitor implements Runnable {
                 log.trace("RSS stream for feed {} will be removed.", feed);
                 activeConnections.remove(feed);
             }
-        }
+        });
     }
 
     private File manageFile(String filePath) throws IOException{
@@ -74,7 +74,6 @@ public class ActiveStreamMonitor implements Runnable {
 
     private synchronized void writeToFile(File file, String content) throws IOException {
         log.info("write to file is active");
-        //FileUtils.copyInputStreamToFile(content, file);
         Files.write(file.toPath(), content.getBytes(), StandardOpenOption.APPEND);
         log.info("write to file is finished");
     }

@@ -13,13 +13,11 @@ import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.io.EmptyInputStream;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.TimerTask;
@@ -52,7 +50,6 @@ public class ApacheRssReader extends TimerTask implements RssReader {
         }
         String is = getRssFeed(rssConfig.getUrl());
         activeConnections.put(requiredRss, is);
-        log.info("critical section");
     }
 
     @Override
