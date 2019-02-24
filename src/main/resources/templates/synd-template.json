@@ -1,0 +1,12 @@
+{
+  "authors" : "getAuthors",
+  "description" : "getDescription",
+  "comments" : "getComments",
+  "category" : "getCategories",
+  "contributor" : "getContributors",
+  "enclosure" : "getEnclosures",
+  "published" : "getPublishedDate",
+  "title" : "getTitle",
+  "updated" : "getUpdatedDate",
+  "links": "getLinks"
+}

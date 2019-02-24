@@ -4,11 +4,9 @@ import com.company.nikas.config.AppConfiguration;
 import com.company.nikas.exceptions.RssParserException;
 import com.company.nikas.model.RssConfiguration;
 import com.company.nikas.system.processing.RssProcessor;
-import com.sun.syndication.feed.WireFeed;
-import com.sun.syndication.feed.atom.Feed;
-import com.sun.syndication.feed.rss.Channel;
-import com.sun.syndication.io.FeedException;
-import com.sun.syndication.io.WireFeedInput;
+import com.rometools.rome.feed.synd.SyndFeed;
+import com.rometools.rome.io.FeedException;
+import com.rometools.rome.io.SyndFeedInput;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.StringReader;
@@ -31,23 +29,25 @@ public class RomeRssProcessor implements RssProcessor {
     public List<Map<String, Object>> parseFeed(String feedId, String content) throws RssParserException {
         rssConfiguration = AppConfiguration.getRssFeeds().get(feedId);
         parseResult = new ArrayList<>();
-        WireFeedInput wireFeedInput = new WireFeedInput();
-        WireFeed feed;
+        SyndFeedInput wireFeedInput = new SyndFeedInput();
+        SyndFeed feed;
         try {
             feed = wireFeedInput.build(new StringReader(content));
         } catch (FeedException e) {
             log.error("Error occured while parsing feed contents,", e);
             throw new RssParserException("Unable to parse RSS feed!", e);
         }
-        rssConfiguration.setRssType(feed.getFeedType());
         return buildMappedRss(feed);
     }
 
-    private List<Map<String, Object>> buildMappedRss(WireFeed feed) {
-        Map<String, String> allowedTags = filterTemplate(feed);
-        List list = getEntriesFromFeed(feed);
+    private List<Map<String, Object>> buildMappedRss(SyndFeed feed) {
+        Map<String, String> allowedTags = filterTemplate();
+        List list = feed.getEntries();
         Integer entryLimit = Optional.ofNullable(rssConfiguration.getElementsPerRequest())
                 .orElse(list.size());
+        if (entryLimit > list.size() || entryLimit < 1) {
+            entryLimit = list.size();
+        }
         for (Integer i = 0; i < entryLimit; i++) {
             Map<String, Object> parsedEntry = new HashMap<>();
             Object entry = list.get(i);
@@ -56,7 +56,7 @@ public class RomeRssProcessor implements RssProcessor {
                     Method toInvoke = entry.getClass().getMethod(commandToInvoke, null);
                     parsedEntry.put(key, toInvoke.invoke(entry, null));
                 } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                    log.error("Invalid method invocation, ignoring element.");
+                    log.error("Invalid method invocation, ignoring element.", e);
                 }
             });
             parseResult.add(parsedEntry);
@@ -64,24 +64,12 @@ public class RomeRssProcessor implements RssProcessor {
         return parseResult;
     }
 
-    private Map<String, String> filterTemplate(WireFeed feed) {
-        Map<String, String> template = (feed instanceof Channel) ?
-                AppConfiguration.getRssTemplate() : AppConfiguration.getAtomTemplate();
+    private Map<String, String> filterTemplate() {
+        Map<String, String> template = AppConfiguration.getSyndTemplate();
         return template.entrySet()
                 .stream()
                 .filter(entry -> rssConfiguration.getActiveTags().contains(entry.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
-
-    private List getEntriesFromFeed(WireFeed feed) {
-        List list;
-        if (feed instanceof Channel) {
-            list = ((Channel) feed).getItems();
-        } else {
-            list = ((Feed) feed).getEntries();
-        }
-        return list;
-    }
-
 
 }

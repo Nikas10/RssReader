@@ -41,16 +41,12 @@ public class App
 
     private static void prepareRssTemplates(){
         try {
-            AppConfiguration.setRssTemplate(objectMapper.convertValue(
-                    objectMapper.readTree(InputController.class.getResourceAsStream("/templates/rss-template.json"))
-                    ,Map.class));
-            AppConfiguration.setAtomTemplate(objectMapper.convertValue(
-                    objectMapper.readTree(InputController.class.getResourceAsStream("/templates/atom-template.json"))
+            AppConfiguration.setSyndTemplate(objectMapper.convertValue(
+                    objectMapper.readTree(InputController.class.getResourceAsStream("/templates/synd-template.json"))
                     ,Map.class));
         } catch (IOException e) {
             log.error("An error occured while processing json templates,", e);
-            AppConfiguration.setRssTemplate(new HashMap<>());
-            AppConfiguration.setAtomTemplate(new HashMap<>());
+            AppConfiguration.setSyndTemplate(new HashMap<>());
         }
     }
 

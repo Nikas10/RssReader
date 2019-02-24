@@ -14,7 +14,6 @@ import java.util.Set;
 public class RssConfiguration implements Serializable {
 
     private String url;
-    private String rssType;
     private String filePath;
     private Long requestPeriod;
 

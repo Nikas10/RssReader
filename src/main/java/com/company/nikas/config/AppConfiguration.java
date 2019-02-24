@@ -12,9 +12,7 @@ public class AppConfiguration implements Serializable {
 
     private static Map<String, RssConfiguration> rssFeeds;
 
-    private static Map<String, String> rssTemplate;
-
-    private static Map<String, String> atomTemplate;
+    private static Map<String, String> syndTemplate;
 
     private static Map<String, String> activeConnections;
 
@@ -34,21 +32,11 @@ public class AppConfiguration implements Serializable {
         activeConnections = connections;
     }
 
-    public static Map<String, String> getRssTemplate() {
-        return rssTemplate;
+    public static Map<String, String> getSyndTemplate() {
+        return syndTemplate;
     }
 
-    public static void setRssTemplate(Map<String, String> template) {
-        rssTemplate = template;
-    }
-
-    public static Map<String, String> getAtomTemplate() {
-        return atomTemplate;
-    }
-
-    public static void setAtomTemplate(Map<String, String> template) {
-        atomTemplate = template;
-    }
+    public static void setSyndTemplate(Map<String, String> template) { syndTemplate = template; }
 
     public AppConfiguration() {
         rssFeeds = new ConcurrentHashMap<>();
