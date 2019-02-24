@@ -18,9 +18,13 @@ import java.util.concurrent.ConcurrentHashMap;
 @Slf4j
 public class App
 {
+    private static ObjectMapper objectMapper;
+
     public static void main( String[] args )
     {
+        objectMapper = new ObjectMapperPreparer().produceInstance();
         initiateConfiguration();
+        prepareRssTemplates();
         Thread monitor = new Thread(new ActiveStreamMonitor(
                 new RomeRssProcessor()));
         monitor.setName("systemMonitor");
@@ -33,7 +37,6 @@ public class App
     private static void initiateConfiguration() {
         PropertyConfigurator.configure(App.class.getResourceAsStream("/log4j.properties"));
         try {
-            ObjectMapper objectMapper = new ObjectMapperPreparer().produceInstance();
             File file = new File(System.getProperty("user.dir") + "/config.json");
             JsonNode configuration = objectMapper.readTree(file);
             AppConfiguration.setRssFeeds(objectMapper.convertValue(configuration.get("rssFeeds"), Map.class));
@@ -42,5 +45,20 @@ public class App
             AppConfiguration.setRssFeeds(new ConcurrentHashMap<>());
         }
         AppConfiguration.setActiveConnections(new ConcurrentHashMap<>());
+    }
+
+    private static void prepareRssTemplates(){
+        try {
+            AppConfiguration.setRssTemplate(objectMapper.convertValue(
+                    objectMapper.readTree(InputController.class.getResourceAsStream("/templates/rss-template.json"))
+                    ,Map.class));
+            AppConfiguration.setAtomTemplate(objectMapper.convertValue(
+                    objectMapper.readTree(InputController.class.getResourceAsStream("/templates/atom-template.json"))
+                    ,Map.class));
+        } catch (IOException e) {
+            log.error("An error occured while processing json templates,", e);
+            AppConfiguration.setRssTemplate(new HashMap<>());
+            AppConfiguration.setAtomTemplate(new HashMap<>());
+        }
     }
 }

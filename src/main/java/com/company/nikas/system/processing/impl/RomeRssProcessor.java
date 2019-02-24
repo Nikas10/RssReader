@@ -15,6 +15,7 @@ import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 
 @Slf4j
@@ -43,7 +44,7 @@ public class RomeRssProcessor implements RssProcessor {
     }
 
     private List<Map<String, Object>> buildMappedRss(WireFeed feed) {
-        Map<String, String> allowedTags = rssConfiguration.getActiveTags();
+        Map<String, String> allowedTags = filterTemplate(feed);
         List list = getEntriesFromFeed(feed);
         Integer entryLimit = Optional.ofNullable(rssConfiguration.getElementsPerRequest())
                 .orElse(list.size());
@@ -61,6 +62,15 @@ public class RomeRssProcessor implements RssProcessor {
             parseResult.add(parsedEntry);
         }
         return parseResult;
+    }
+
+    private Map<String, String> filterTemplate(WireFeed feed) {
+        Map<String, String> template = (feed instanceof Channel) ?
+                AppConfiguration.getRssTemplate() : AppConfiguration.getAtomTemplate();
+        return template.entrySet()
+                .stream()
+                .filter(entry -> rssConfiguration.getActiveTags().contains(entry.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
     private List getEntriesFromFeed(WireFeed feed) {

@@ -8,7 +8,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Map;
+import java.util.Set;
 
 @Data
 public class RssConfiguration implements Serializable {
@@ -23,6 +23,6 @@ public class RssConfiguration implements Serializable {
     private LocalDateTime lastUpdateDate;
 
     private Integer elementsPerRequest;
-    private Map<String, String> activeTags;
+    private Set<String> activeTags;
 
 }
