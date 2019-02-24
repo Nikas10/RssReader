@@ -14,8 +14,6 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -26,10 +24,6 @@ import static java.util.Objects.isNull;
 
 @Slf4j
 public class ApacheRssReader extends TimerTask implements RssReader {
-    static Logger logger = Logger.getLogger(ApacheRssReader.class);
-    static {
-        logger.setLevel(Level.INFO);
-    }
 
     private Map<String, String> activeConnections;
     private Map<String, RssConfiguration> rssFeeds;

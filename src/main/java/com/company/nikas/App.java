@@ -1,61 +1,46 @@
 package com.company.nikas;
 
 import com.company.nikas.config.AppConfiguration;
-import com.company.nikas.integrations.impl.ApacheRssReader;
-import com.company.nikas.model.RssConfiguration;
+import com.company.nikas.config.ObjectMapperPreparer;
+import com.company.nikas.controller.InputController;
 import com.company.nikas.system.ActiveStreamMonitor;
 import com.company.nikas.system.processing.impl.RomeRssProcessor;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.log4j.PropertyConfigurator;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.io.File;
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
+@Slf4j
 public class App
 {
-    static Logger logger = Logger.getLogger(App.class);
-
     public static void main( String[] args )
     {
-        logger.setLevel(Level.INFO);
+        initiateConfiguration();
+        Thread monitor = new Thread(new ActiveStreamMonitor(
+                new RomeRssProcessor()));
+        monitor.setName("systemMonitor");
+        monitor.start();
+        Thread controller = new Thread(new InputController(
+                new Scanner(System.in), new Timer()));
+        controller.start();
+    }
 
+    private static void initiateConfiguration() {
         PropertyConfigurator.configure(App.class.getResourceAsStream("/log4j.properties"));
-
-        AppConfiguration appConfiguration = new AppConfiguration();
-        Timer timer = new Timer();
-        String name = "CNN Top stories";
-        Map<String, String> tags = new HashMap<>();
-        tags.put("title", "getTitle");
-        tags.put("description", "getDescription");
-        tags.put("generator", "getGenerator");
-        tags.put("lastBuildDate", "getLastBuildDate");
-        tags.put("managingEditor", "getManagingEditor");
-        RssConfiguration rssConfiguration = new RssConfiguration();
-        rssConfiguration.setFilePath("G:\\DISKRELATED\\UNIVER\\git\\RssReader\\target\\x.txt");
-        rssConfiguration.setRequestSchedule(1000);
-        rssConfiguration.setUrl("http://rss.cnn.com/rss/cnn_topstories.rss");
-        rssConfiguration.setActiveTags(tags);
-        AppConfiguration.getRssFeeds().put(name, rssConfiguration);
-
-        TimerTask rssTest = new ApacheRssReader(name);
-        System.out.println("scheduling the task");
-        timer.schedule(rssTest, rssConfiguration.getRequestSchedule());
-
-        Thread thread = new Thread(new ActiveStreamMonitor(new RomeRssProcessor()));
-        thread.start();
-
         try {
-            Thread.sleep(5000);
-            logger.info("sleep finished");
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+            ObjectMapper objectMapper = new ObjectMapperPreparer().produceInstance();
+            File file = new File(System.getProperty("user.dir") + "/config.json");
+            JsonNode configuration = objectMapper.readTree(file);
+            AppConfiguration.setRssFeeds(objectMapper.convertValue(configuration.get("rssFeeds"), Map.class));
+        } catch (IOException e) {
+            log.info("Unable to fetch configuration file, creating initial settings.");
+            AppConfiguration.setRssFeeds(new ConcurrentHashMap<>());
         }
-
-        thread.interrupt();
-        rssTest.cancel();
-        timer.cancel();
+        AppConfiguration.setActiveConnections(new ConcurrentHashMap<>());
     }
 }

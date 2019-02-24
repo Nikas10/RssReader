@@ -1,0 +1,11 @@
+{
+  "author" : "getAuthors",
+  "category" : "getCategories",
+  "contributor" : "getContributors",
+  "id" : "getId",
+  "published" : "getPublished",
+  "rights" : "getRights",
+  "summary" : "getSummary",
+  "title" : "getTitle",
+  "updated" : "getUpdated"
+}

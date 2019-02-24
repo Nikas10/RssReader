@@ -7,24 +7,19 @@ import com.company.nikas.exceptions.RssParserException;
 import com.company.nikas.model.RssConfiguration;
 import com.company.nikas.system.processing.RssProcessor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
+import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 import static java.util.Objects.isNull;
 
 @Slf4j
 public class ActiveStreamMonitor implements Runnable {
-
-    static Logger logger = Logger.getLogger(ActiveStreamMonitor.class);
-    static {
-        logger.setLevel(Level.INFO);
-    }
 
     private RssProcessor rssProcessor;
     private ObjectMapperPreparer objectMapperPreparer;
@@ -80,13 +75,17 @@ public class ActiveStreamMonitor implements Runnable {
         return file;
     }
 
-    private Map<String, Object> getParsedFeed(String feedId, String content) throws RssParserException {
+    private List<Map<String, Object>> getParsedFeed(String feedId, String content) throws RssParserException {
         return rssProcessor.parseFeed(feedId, content);
     }
 
-    private synchronized void writeToFile(File file, Map<String, Object> content) throws IOException {
+    private synchronized void writeToFile(File file, List<Map<String, Object>> content) throws IOException {
+        Files.write(file.toPath(),("\n" + new Date().toString() + " : \n").getBytes(),
+                StandardOpenOption.APPEND);
         Files.write(file.toPath(),
-                objectMapperPreparer.produceInstance().writeValueAsBytes(content),
+                objectMapperPreparer.produceInstance()
+                        .writerWithDefaultPrettyPrinter()
+                        .writeValueAsBytes(content),
                 StandardOpenOption.APPEND);
     }
 
