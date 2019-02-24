@@ -40,7 +40,6 @@ public class ActiveStreamMonitor implements Runnable {
             checkRunConditions();
             processStreams();
         }
-        log.info("access finish sect");
     }
 
     private void checkRunConditions() {

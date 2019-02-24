@@ -1,7 +1,6 @@
 package com.company.nikas.config;
 
 import com.company.nikas.model.RssConfiguration;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -17,7 +16,6 @@ public class AppConfiguration implements Serializable {
 
     private static Map<String, String> atomTemplate;
 
-    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     private static Map<String, String> activeConnections;
 
     public static Map<String, RssConfiguration> getRssFeeds() {

@@ -3,8 +3,6 @@ package com.company.nikas;
 import com.company.nikas.config.AppConfiguration;
 import com.company.nikas.config.ObjectMapperPreparer;
 import com.company.nikas.controller.InputController;
-import com.company.nikas.system.ActiveStreamMonitor;
-import com.company.nikas.system.processing.impl.RomeRssProcessor;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -25,21 +23,15 @@ public class App
         objectMapper = new ObjectMapperPreparer().produceInstance();
         initiateConfiguration();
         prepareRssTemplates();
-        Thread monitor = new Thread(new ActiveStreamMonitor(
-                new RomeRssProcessor()));
-        monitor.setName("systemMonitor");
-        monitor.start();
-        Thread controller = new Thread(new InputController(
-                new Scanner(System.in), new Timer()));
-        controller.start();
+        initiateAsyncProcesses();
     }
 
     private static void initiateConfiguration() {
         PropertyConfigurator.configure(App.class.getResourceAsStream("/log4j.properties"));
         try {
-            File file = new File(System.getProperty("user.dir") + "/config.json");
+            File file = new File(System.getProperty("user.dir") + "/configuration.json");
             JsonNode configuration = objectMapper.readTree(file);
-            AppConfiguration.setRssFeeds(objectMapper.convertValue(configuration.get("rssFeeds"), Map.class));
+            AppConfiguration.setRssFeeds(objectMapper.convertValue(configuration, Map.class));
         } catch (IOException e) {
             log.info("Unable to fetch configuration file, creating initial settings.");
             AppConfiguration.setRssFeeds(new ConcurrentHashMap<>());
@@ -60,5 +52,11 @@ public class App
             AppConfiguration.setRssTemplate(new HashMap<>());
             AppConfiguration.setAtomTemplate(new HashMap<>());
         }
+    }
+
+    private static void initiateAsyncProcesses() {
+        Thread controller = new Thread(new InputController(
+                new Scanner(System.in), new Timer()));
+        controller.start();
     }
 }
