@@ -16,7 +16,7 @@ public class RssConfiguration implements Serializable {
     private String url;
     private String rssType;
     private String filePath;
-    private Integer requestPeriod;
+    private Long requestPeriod;
 
     @JsonSerialize(using = ToStringSerializer.class)
     @JsonDeserialize(using = DateDeserializers.DateDeserializer.class)

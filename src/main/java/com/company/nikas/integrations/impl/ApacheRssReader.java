@@ -17,6 +17,7 @@ import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.TimerTask;
 
@@ -44,6 +45,7 @@ public class ApacheRssReader extends TimerTask implements RssReader {
         }
         String is = getRssFeed(rssConfig.getUrl());
         activeConnections.put(requiredRss, is);
+        rssConfig.setLastUpdateDate(LocalDateTime.now());
     }
 
     @Override

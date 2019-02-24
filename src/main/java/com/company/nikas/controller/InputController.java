@@ -8,12 +8,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
+
+import static java.util.Objects.isNull;
 
 @Slf4j
 public class InputController implements Runnable {
 
     private Timer timer;
+    private Boolean shutdownFlag = false;
     private Scanner input;
     Map<String, String> rssTemplate;
     Map<String, String> atomTemplate;
@@ -39,25 +44,35 @@ public class InputController implements Runnable {
     @Override
     public void run() {
         generateFeedSubscription();
-
-
-
+        prepareFeedSubscriptions();
         do {
-            Thread.yield();
-        } while (Thread.interrupted());
+
+        } while (!Thread.interrupted() || !shutdownFlag);
     }
 
-    public void generateFeedSubscription() {
+    private void generateFeedSubscription() {
         String name = "CNN Top stories";
         RssConfiguration rssConfiguration = new RssConfiguration();
         rssConfiguration.setFilePath("G:\\DISKRELATED\\UNIVER\\git\\RssReader\\target\\x.txt");
-        rssConfiguration.setRequestPeriod(1000);
+        rssConfiguration.setRequestPeriod(8000L);
         rssConfiguration.setElementsPerRequest(5);
         rssConfiguration.setUrl("http://rss.cnn.com/rss/cnn_topstories.rss");
         rssConfiguration.setActiveTags(rssTemplate);
         AppConfiguration.getRssFeeds().put(name, rssConfiguration);
-        TimerTask rssTest = new ApacheRssReader(name);
-        System.out.println("scheduling the task");
-        timer.schedule(rssTest, rssConfiguration.getRequestPeriod());
+    }
+
+    private void prepareFeedSubscriptions() {
+        AppConfiguration.getRssFeeds().entrySet().parallelStream().forEach(entry -> {
+            RssConfiguration rssConfiguration = entry.getValue();
+            TimerTask rssTest = new ApacheRssReader(entry.getKey());
+            if (isNull(rssConfiguration.getLastUpdateDate())) {
+                rssConfiguration.setLastUpdateDate(LocalDateTime.now());
+            }
+            long diff = ChronoUnit.MILLIS.between(LocalDateTime.now(), rssConfiguration.getLastUpdateDate())
+                    + rssConfiguration.getRequestPeriod();
+            if (diff <= 0) diff = 0L;
+            timer.schedule(rssTest, diff,
+                    rssConfiguration.getRequestPeriod());
+        });
     }
 }

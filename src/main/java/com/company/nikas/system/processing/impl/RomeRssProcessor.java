@@ -30,14 +30,15 @@ public class RomeRssProcessor implements RssProcessor {
     public List<Map<String, Object>> parseFeed(String feedId, String content) throws RssParserException {
         rssConfiguration = AppConfiguration.getRssFeeds().get(feedId);
         parseResult = new ArrayList<>();
-        WireFeedInput syndFeedInput = new WireFeedInput();
+        WireFeedInput wireFeedInput = new WireFeedInput();
         WireFeed feed;
         try {
-            feed = syndFeedInput.build(new StringReader(content));
+            feed = wireFeedInput.build(new StringReader(content));
         } catch (FeedException e) {
             log.error("Error occured while parsing feed contents,", e);
             throw new RssParserException("Unable to parse RSS feed!", e);
         }
+        rssConfiguration.setRssType(feed.getFeedType());
         return buildMappedRss(feed);
     }
 

@@ -57,7 +57,7 @@ public class ActiveStreamMonitor implements Runnable {
                 RssConfiguration rssConfiguration = rssFeeds.get(feed);
                 String is = activeConnections.get(feed);
                 File toWrite = manageFile(rssConfiguration.getFilePath());
-                writeToFile(toWrite, getParsedFeed(feed, is));
+                writeToFile(feed, toWrite, getParsedFeed(feed, is));
                 activeConnections.remove(feed);
             } catch (RssConfigurationNotFoundException | IOException | RssParserException e) {
                 log.trace("RSS stream for feed {} will be removed.", feed);
@@ -66,7 +66,7 @@ public class ActiveStreamMonitor implements Runnable {
         });
     }
 
-    private File manageFile(String filePath) throws IOException{
+    private File manageFile(String filePath) throws IOException {
         File file = new File(filePath);
         if (!file.isFile()) {
             file.getParentFile().mkdirs();
@@ -75,16 +75,17 @@ public class ActiveStreamMonitor implements Runnable {
         return file;
     }
 
-    private List<Map<String, Object>> getParsedFeed(String feedId, String content) throws RssParserException {
+    private List<Map<String, Object>> getParsedFeed(String feedId, String content)
+            throws RssParserException {
         return rssProcessor.parseFeed(feedId, content);
     }
 
-    private synchronized void writeToFile(File file, List<Map<String, Object>> content) throws IOException {
-        Files.write(file.toPath(),("\n" + new Date().toString() + " : \n").getBytes(),
+    private synchronized void writeToFile(String feed, File file, List<Map<String, Object>> content)
+            throws IOException {
+        Files.write(file.toPath(),("\n" + new Date().toString() + ", feed: " + feed + "\n").getBytes(),
                 StandardOpenOption.APPEND);
         Files.write(file.toPath(),
                 objectMapperPreparer.produceInstance()
-                        .writerWithDefaultPrettyPrinter()
                         .writeValueAsBytes(content),
                 StandardOpenOption.APPEND);
     }
