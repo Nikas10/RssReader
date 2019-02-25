@@ -3,7 +3,7 @@
     "url" : "http://rss.cnn.com/rss/cnn_topstories.rss",
     "filePath" : "G:\\DISKRELATED\\UNIVER\\git\\RssReader\\target\\x.txt",
     "requestPeriod" : 8000,
-    "lastUpdateDate" : "2019-02-24T17:55:54.209",
+    "lastUpdateDate" : "2019-02-25T18:35:22.723",
     "elementsPerRequest" : 5,
     "activeTags" : [ "authors" ]
   }

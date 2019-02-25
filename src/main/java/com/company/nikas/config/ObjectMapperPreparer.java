@@ -15,6 +15,7 @@ public class ObjectMapperPreparer {
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         objectMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        objectMapper.findAndRegisterModules();
         return objectMapper;
     }
 }

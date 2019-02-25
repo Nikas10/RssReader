@@ -16,35 +16,34 @@ import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
 
 @Slf4j
-public class InputController implements Runnable {
+public class InputController {
 
-    private Timer timer;
+    private ScheduledExecutorService timer;
     private Boolean shutdownFlag = false;
     private Scanner input;
     private Thread monitor;
-    private Map<String, TimerTask> executionSchedule;
+    private Map<String, ScheduledFuture> executionSchedule;
 
-    public InputController(Scanner input, Timer timer) {
+    public InputController(Scanner input, ScheduledExecutorService timer) {
         this.timer = timer;
         this.input = input;
         this.executionSchedule = new ConcurrentHashMap<>();
     }
 
-    @Override
     public void run() {
         launchConnectionMonitor();
         prepareFeedSubscriptions();
-        while (!Thread.interrupted() && !shutdownFlag) {
+        while (!shutdownFlag) {
             processUserInput();
         }
         saveApplicationData();
-        timer.cancel();
+        timer.shutdown();
     }
 
     private void launchConnectionMonitor() {
@@ -76,16 +75,15 @@ public class InputController implements Runnable {
     private void prepareFeedSubscriptions() {
         AppConfiguration.getRssFeeds().entrySet().parallelStream().forEach(entry -> {
             RssConfiguration rssConfiguration = entry.getValue();
-            TimerTask rssTest = new ApacheRssReader(entry.getKey());
+            Runnable rssTest = new ApacheRssReader(entry.getKey());
             if (isNull(rssConfiguration.getLastUpdateDate())) {
                 rssConfiguration.setLastUpdateDate(LocalDateTime.now());
             }
             long diff = ChronoUnit.MILLIS.between(LocalDateTime.now(), rssConfiguration.getLastUpdateDate())
                     + rssConfiguration.getRequestPeriod();
             if (diff <= 0) diff = 0L;
-            executionSchedule.put(entry.getKey(), rssTest);
-            timer.schedule(rssTest, diff,
-                    rssConfiguration.getRequestPeriod());
+            executionSchedule.put(entry.getKey(),
+            timer.scheduleAtFixedRate(rssTest, diff, rssConfiguration.getRequestPeriod(), TimeUnit.MILLISECONDS));
         });
     }
 
@@ -143,8 +141,8 @@ public class InputController implements Runnable {
     }
 
     private void removeAllFeeds() {
-        timer.cancel();
-        timer = new Timer();
+        timer.shutdown();
+        timer = Executors.newScheduledThreadPool(4);
         executionSchedule = new ConcurrentHashMap<>();
         AppConfiguration.setRssFeeds(new ConcurrentHashMap<>());
         log.info("Feed subscriptions were purged!");
@@ -156,7 +154,7 @@ public class InputController implements Runnable {
         if (isNull(AppConfiguration.getRssFeeds().remove(feedName))) {
             log.info("Feed by name {} was not found!", feedName);
         } else {
-            executionSchedule.remove(feedName).cancel();
+            executionSchedule.remove(feedName).cancel(false);
             AppConfiguration.getRssFeeds().remove(feedName);
             log.info("Feed {} was removed!", feedName);
         }
@@ -184,9 +182,9 @@ public class InputController implements Runnable {
             rssConfiguration.setRequestPeriod(delay);
             rssConfiguration.setUrl(url);
             AppConfiguration.getRssFeeds().put(feedName, rssConfiguration);
-            TimerTask task = new ApacheRssReader(feedName);
-            executionSchedule.put(feedName, task);
-            timer.schedule(task, 0, rssConfiguration.getRequestPeriod());
+            Runnable task = new ApacheRssReader(feedName);
+            executionSchedule.put(feedName,
+                    timer.scheduleAtFixedRate(task, 0, rssConfiguration.getRequestPeriod(), TimeUnit.MILLISECONDS));
             log.info("Feed {} was succesfully added", feedName);
         } else {
             log.error("Feed with name {} already exists!", feedName);
@@ -207,8 +205,8 @@ public class InputController implements Runnable {
                     System.out.println("Enter feed request delay: ");
                     long delay = input.nextLong();
                     rssConfiguration.setRequestPeriod(delay);
-                    executionSchedule.get(feedName).cancel();
-                    timer.schedule(executionSchedule.get(feedName), 0, delay);
+                    executionSchedule.get(feedName).cancel(false);
+                    timer.scheduleAtFixedRate(new ApacheRssReader(feedName), 0, delay, TimeUnit.MILLISECONDS);
                     break;
                 }
                 case ("tags") : {

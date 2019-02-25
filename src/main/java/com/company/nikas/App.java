@@ -3,7 +3,8 @@ package com.company.nikas;
 import com.company.nikas.config.AppConfiguration;
 import com.company.nikas.config.ObjectMapperPreparer;
 import com.company.nikas.controller.InputController;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.company.nikas.model.RssConfiguration;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.log4j.PropertyConfigurator;
@@ -12,6 +13,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Executors;
 
 @Slf4j
 public class App
@@ -30,8 +32,8 @@ public class App
         PropertyConfigurator.configure(App.class.getResourceAsStream("/log4j.properties"));
         try {
             File file = new File(System.getProperty("user.dir") + "/configuration.json");
-            JsonNode configuration = objectMapper.readTree(file);
-            AppConfiguration.setRssFeeds(objectMapper.convertValue(configuration, Map.class));
+            AppConfiguration.setRssFeeds(
+                    objectMapper.readValue(file, new TypeReference<ConcurrentHashMap<String, RssConfiguration>>(){}));
         } catch (IOException e) {
             log.info("Unable to fetch configuration file, creating initial settings.");
             AppConfiguration.setRssFeeds(new ConcurrentHashMap<>());
@@ -42,7 +44,8 @@ public class App
     private static void prepareRssTemplates(){
         try {
             AppConfiguration.setSyndTemplate(objectMapper.convertValue(
-                    objectMapper.readTree(InputController.class.getResourceAsStream("/templates/synd-template.json"))
+                    objectMapper.readTree(InputController.class.
+                            getResourceAsStream("/templates/synd-template.json"))
                     ,Map.class));
         } catch (IOException e) {
             log.error("An error occured while processing json templates,", e);
@@ -51,8 +54,7 @@ public class App
     }
 
     private static void initiateAsyncProcesses() {
-        Thread controller = new Thread(new InputController(
-                new Scanner(System.in), new Timer()));
-        controller.start();
+        new InputController(
+                new Scanner(System.in), Executors.newScheduledThreadPool(4)).run();
     }
 }

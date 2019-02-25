@@ -19,12 +19,11 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.TimerTask;
 
 import static java.util.Objects.isNull;
 
 @Slf4j
-public class ApacheRssReader extends TimerTask implements RssReader {
+public class ApacheRssReader implements RssReader, Runnable {
 
     private Map<String, String> activeConnections;
     private Map<String, RssConfiguration> rssFeeds;
