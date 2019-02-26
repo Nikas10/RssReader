@@ -167,7 +167,7 @@ public class InputController {
         if (isNull(AppConfiguration.getRssFeeds().get(feedName))) {
             RssConfiguration rssConfiguration = new RssConfiguration();
             System.out.println("Enter feed url: ");
-            String url = input.nextLine();
+            String url = input.nextLine().trim();
 
             System.out.println("Enter feed request delay: ");
             long delay = input.nextLong();
@@ -175,8 +175,9 @@ public class InputController {
             System.out.println("Enter feed entry limit: ");
             int limit = input.nextInt();
 
-            System.out.println("Enter feed file path: ");
-            String file = input.nextLine();
+            String file = "./" + url.trim()
+                    .replace("\\/\\/:", "/")
+                    .replaceAll("[;:*?\"<>|&']", "/");
 
             rssConfiguration.setElementsPerRequest(limit);
             rssConfiguration.setFilePath(file);

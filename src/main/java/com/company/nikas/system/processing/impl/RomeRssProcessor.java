@@ -66,9 +66,11 @@ public class RomeRssProcessor implements RssProcessor {
 
     private Map<String, String> filterTemplate() {
         Map<String, String> template = AppConfiguration.getSyndTemplate();
+        Set<String> tags = Optional.ofNullable(rssConfiguration.getActiveTags())
+                .orElse(AppConfiguration.getSyndTemplate().keySet());
         return template.entrySet()
                 .stream()
-                .filter(entry -> rssConfiguration.getActiveTags().contains(entry.getKey()))
+                .filter(entry -> tags.contains(entry.getKey()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
     }
 
