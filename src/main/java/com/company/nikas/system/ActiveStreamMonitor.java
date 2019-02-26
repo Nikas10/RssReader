@@ -18,6 +18,9 @@ import java.util.Map;
 
 import static java.util.Objects.isNull;
 
+/**
+ * Class, responsible for writing RSS data to files.
+ */
 @Slf4j
 public class ActiveStreamMonitor implements Runnable {
 
@@ -42,12 +45,19 @@ public class ActiveStreamMonitor implements Runnable {
         }
     }
 
+    /**
+     * Checks whether to continue monitoring the system.
+     */
     private void checkRunConditions() {
         while (activeConnections.isEmpty() && !Thread.currentThread().isInterrupted()) {
             Thread.yield();
         }
     }
 
+    /**
+     * Processes activeConnections collection and writes all received feed data to files.
+     * After writing, removes entries from collection.
+     */
     private void processStreams() {
         activeConnections.entrySet().parallelStream().forEach(entry -> {
             String feed = entry.getKey();
@@ -65,6 +75,12 @@ public class ActiveStreamMonitor implements Runnable {
         });
     }
 
+    /**
+     * Creates file from file path if file does not exist. Else, returns a file object
+     * @param filePath Path to file (absolute/relative)
+     * @return File object representing found/created file.
+     * @throws IOException If file was not created (access violation, bad path, etc)
+     */
     private File manageFile(String filePath) throws IOException {
         File file = new File(filePath);
         if (!file.isFile()) {
@@ -74,11 +90,25 @@ public class ActiveStreamMonitor implements Runnable {
         return file;
     }
 
+    /**
+     * Gets mapped collection, representing feed data.
+     * @param feedId Feed name (for getting metadata)
+     * @param content Raw XML feed data
+     * @return Mapper collection, representing feed data.
+     * @throws RssParserException in case raw data is damaged or invalid.
+     */
     private List<Map<String, Object>> getParsedFeed(String feedId, String content)
             throws RssParserException {
         return rssProcessor.parseFeed(feedId, content);
     }
 
+    /**
+     * Writes parsed feed data to a file.
+     * @param feed Feed name
+     * @param file File object, representing file to write to
+     * @param content Mapped feed content
+     * @throws IOException in case writing to file was unsuccessful.
+     */
     private synchronized void writeToFile(String feed, File file, List<Map<String, Object>> content)
             throws IOException {
         Files.write(file.toPath(),("\n" + new Date().toString() + ", feed: " + feed + "\n").getBytes(),
@@ -89,6 +119,10 @@ public class ActiveStreamMonitor implements Runnable {
                 StandardOpenOption.APPEND);
     }
 
+    /**
+     * Checks feed subscription metadata by feed name. Throws exception if feed metadata is not found.
+     * @param feed Feed name.
+     */
     private void checkConfigurationPresense(String feed) {
         RssConfiguration rssConfiguration = rssFeeds.get(feed);
         if (isNull(rssConfiguration)) {

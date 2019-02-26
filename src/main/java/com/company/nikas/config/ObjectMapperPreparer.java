@@ -4,6 +4,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 
+/**
+ * Jackson's ObjectMapper factory class. Produces instances with several activatedd features.
+ */
 public class ObjectMapperPreparer {
 
     private ObjectMapper objectMapper;

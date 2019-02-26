@@ -22,13 +22,19 @@ import java.util.stream.Collectors;
 
 import static java.util.Objects.isNull;
 
+/**
+ * Class that manages feed subscriptions, user input and active connection monitor state.
+ */
 @Slf4j
 public class InputController {
 
+    /** Service for launching subscriptions*/
     private ScheduledExecutorService timer;
     private Boolean shutdownFlag = false;
     private Scanner input;
+    /** Thread object for active connection monitor. Declared explicitly for a quicker interrupt procedure.*/
     private Thread monitor;
+    /** Contains all information about planned reguests for RSS subscriptions for managing operations*/
     private Map<String, ScheduledFuture> executionSchedule;
 
     public InputController(Scanner input, ScheduledExecutorService timer) {
@@ -37,6 +43,10 @@ public class InputController {
         this.executionSchedule = new ConcurrentHashMap<>();
     }
 
+    /**
+     * Run method. Activates connection monitor, prepares feed subscriptions and processes
+     * user input. On shutdown saves user data and kills subscription service.
+     */
     public void run() {
         launchConnectionMonitor();
         prepareFeedSubscriptions();
@@ -47,12 +57,20 @@ public class InputController {
         timer.shutdown();
     }
 
+    /**
+     * Method for activating connection monitor, responsible for file operations.
+     * Starts monitor in a new thread.
+     */
     private void launchConnectionMonitor() {
         monitor = new Thread(new ActiveStreamMonitor(
                 new RomeRssProcessor()));
         monitor.start();
     }
 
+    /**
+     * Saves RSS feed subscriptions to a configuration.json file
+     * in JSON format.
+     */
     private void saveApplicationData() {
         try {
             File toSave = manageFile(System.getProperty("user.dir") + "/configuration.json");
@@ -64,6 +82,12 @@ public class InputController {
         }
     }
 
+    /**
+     * Creates file from file path if file does not exist. Else, returns a file object
+     * @param filePath Path to file (absolute/relative)
+     * @return File object representing found/created file.
+     * @throws IOException If file was not created (access violation, bad path, etc)
+     */
     private File manageFile(String filePath) throws IOException {
         File file = new File(filePath);
         if (!file.isFile()) {
@@ -73,6 +97,9 @@ public class InputController {
         return file;
     }
 
+    /**
+     * Creates RSS feed subscriptions from initial application configuration, if one is present (not empty)
+     */
     private void prepareFeedSubscriptions() {
         AppConfiguration.getRssFeeds().entrySet().parallelStream().forEach(entry -> {
             RssConfiguration rssConfiguration = entry.getValue();
@@ -88,6 +115,9 @@ public class InputController {
         });
     }
 
+    /**
+     * Manages user input, redirecting to other processing methods.
+     */
     private void processUserInput() {
         printMainMenu();
         String command = input.nextLine();
@@ -125,6 +155,9 @@ public class InputController {
         }
     }
 
+    /**
+     * Prints main menu with list of all application features.
+     */
     private void printMainMenu() {
         System.out.println("1. Create feed. (create)");
         System.out.println("2. List all feeds. (list)");
@@ -134,13 +167,19 @@ public class InputController {
         System.out.println("6. Exit. (exit)");
     }
 
+    /**
+     * Prints all feed names and RSS urls.
+     */
     private void printAllFeeds() {
         System.out.println("Available feeds: ");
         AppConfiguration.getRssFeeds()
-                .keySet()
-                .forEach(System.out::println);
+                .forEach((key, value) ->
+                        System.out.println(key + " : " + value.getUrl()));
     }
 
+    /**
+     * Purges all current subscriptions
+     */
     private void removeAllFeeds() {
         timer.shutdown();
         timer = Executors.newScheduledThreadPool(4);
@@ -149,6 +188,9 @@ public class InputController {
         log.info("Feed subscriptions were purged!");
     }
 
+    /**
+     * Disables feed subscription by feed name. Name is entered by user.
+     */
     private void disableFeed() {
         System.out.println("Enter feed name: ");
         String feedName = input.nextLine();
@@ -161,6 +203,10 @@ public class InputController {
         }
     }
 
+    /**
+     * Creates and launches a new RSS feed subscription. Name, URL, and other options
+     * are entered by user.
+     */
     private void createFeed() {
         System.out.println("Enter feed name: ");
         String feedName = input.nextLine();
@@ -193,6 +239,10 @@ public class InputController {
         }
     }
 
+    /**
+     * Changes feed subscription parameters by feed name. Name is entered by user.
+     * In case of changing delay between requests, subscription is rescheduled.
+     */
     private void manageFeed() {
         System.out.println("Enter feed name: ");
         String feedName = input.nextLine();
@@ -241,12 +291,20 @@ public class InputController {
         }
     }
 
+    /**
+     * Prints all RSS tags according to ROME library SyndEntry class,
+     * which supports both RSS all version and Atom notations.
+     */
     private void printAllTags() {
         AppConfiguration.getSyndTemplate()
                 .keySet()
                 .forEach(System.out::println);
     }
 
+    /**
+     * Prints subscription management options menu with all
+     * available features.
+     */
     private void printOptionMenu() {
         System.out.println("Feed options:");
         System.out.println("1. Delay period (delay)");

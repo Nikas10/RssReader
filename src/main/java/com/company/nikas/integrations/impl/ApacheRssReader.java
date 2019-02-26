@@ -21,6 +21,10 @@ import java.util.Map;
 
 import static java.util.Objects.isNull;
 
+/**
+ * Class, responsible for obtaining RSS feed subscription by HTTP requests.
+ * Uses Apache HTTP client implementation
+ */
 @Slf4j
 public class ApacheRssReader implements RssReader, Runnable {
 
@@ -37,6 +41,10 @@ public class ApacheRssReader implements RssReader, Runnable {
         this.httpClient = client;
     }
 
+    /**
+     * Gets RSS feed data and puts it to active connections storage.
+     * Updates subscription's last update date.
+     */
     @Override
     public void run() {
         RssConfiguration rssConfig = rssFeeds.get(requiredRss);
@@ -67,6 +75,11 @@ public class ApacheRssReader implements RssReader, Runnable {
         }
     }
 
+    /**
+     * Creates HTTP connection by giver URL and executes request.
+     * @param url Web resource address
+     * @return Response from server, null in case of error.
+     */
     private CloseableHttpResponse initiateConnection(String url) {
         try {
             HttpGet httpGet = new HttpGet(url);
@@ -77,6 +90,11 @@ public class ApacheRssReader implements RssReader, Runnable {
         }
     }
 
+    /**
+     * Gets response body, received during request to server.
+     * @param response Raw response from server.
+     * @return response body in String format.
+     */
     private String getHttpReponse(CloseableHttpResponse response) {
         try {
             HttpEntity entity = response.getEntity();
@@ -90,6 +108,10 @@ public class ApacheRssReader implements RssReader, Runnable {
         }
     }
 
+    /**
+     * Validates HTTP status code, throws exception if code is invalid
+     * @param status status code
+     */
     private void validateStatusCode(int status) {
         if (status < HttpStatus.SC_OK || status >= HttpStatus.SC_MULTIPLE_CHOICES) {
             throw new InvalidResponseException("Response status code is not allowed!");

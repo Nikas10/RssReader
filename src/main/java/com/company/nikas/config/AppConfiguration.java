@@ -5,15 +5,21 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Class, responsible for storing application configuration data:
+ * current feed subscription, current active transactions.
+ */
 @Data
 public class AppConfiguration implements Serializable {
 
+    /** Stores feed subscription data*/
     private static Map<String, RssConfiguration> rssFeeds;
 
+    /** Stores mapping - rss feed tag: object getter (used during parse process)*/
     private static Map<String, String> syndTemplate;
 
+    /** Stores information about received feed data for writing in file*/
     private static Map<String, String> activeConnections;
 
     public static Map<String, RssConfiguration> getRssFeeds() {

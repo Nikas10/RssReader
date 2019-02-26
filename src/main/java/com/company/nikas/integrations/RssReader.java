@@ -1,7 +1,8 @@
 package com.company.nikas.integrations;
 
-import java.io.InputStream;
-
+/**
+ * Interface, defining operation for getting RSS feed subscription data.
+ */
 public interface RssReader {
 
     /**

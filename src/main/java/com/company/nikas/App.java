@@ -28,6 +28,10 @@ public class App
         initiateAsyncProcesses();
     }
 
+    /**
+     * Obtains properties from resources, and saved application configuration from file system.
+     * If no configuration is present, creates an empty one.
+     */
     private static void initiateConfiguration() {
         PropertyConfigurator.configure(App.class.getResourceAsStream("/log4j.properties"));
         try {
@@ -41,6 +45,10 @@ public class App
         AppConfiguration.setActiveConnections(new ConcurrentHashMap<>());
     }
 
+    /**
+     * Fetches RSS tag template from application resources.
+     * Sets default tag mapping if no template is present
+     */
     private static void prepareRssTemplates(){
         try {
             AppConfiguration.setSyndTemplate(objectMapper.convertValue(
@@ -49,10 +57,18 @@ public class App
                     ,Map.class));
         } catch (IOException e) {
             log.error("An error occured while processing json templates,", e);
-            AppConfiguration.setSyndTemplate(new HashMap<>());
+            Map<String, String> tagMapping = new HashMap<>();
+            tagMapping.put("authors", "getAuthors");
+            tagMapping.put("description", "getDescription");
+            tagMapping.put("title", "getTitle");
+            tagMapping.put("published", "getPublishedData");
+            AppConfiguration.setSyndTemplate(tagMapping);
         }
     }
 
+    /**
+     * Launches controller class.
+     */
     private static void initiateAsyncProcesses() {
         new InputController(
                 new Scanner(System.in), Executors.newScheduledThreadPool(4)).run();

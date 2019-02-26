@@ -16,6 +16,9 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 
+/**
+ * ROME inplementation of RssProcessor interface.
+ */
 @Slf4j
 public class RomeRssProcessor implements RssProcessor {
 
@@ -40,6 +43,11 @@ public class RomeRssProcessor implements RssProcessor {
         return buildMappedRss(feed);
     }
 
+    /**
+     * Creates mapped collection based on ROME SyndFeed object.
+     * @param feed SyndFeed representation of RSS XML data.
+     * @return mapped collection, representing feed XML data.
+     */
     private List<Map<String, Object>> buildMappedRss(SyndFeed feed) {
         Map<String, String> allowedTags = filterTemplate();
         List list = feed.getEntries();
@@ -64,6 +72,10 @@ public class RomeRssProcessor implements RssProcessor {
         return parseResult;
     }
 
+    /**
+     * Manages, which tags will be included in mapped data representation
+     * @return Map, containg tag name as a key and SyndFeed getter as a value.
+     */
     private Map<String, String> filterTemplate() {
         Map<String, String> template = AppConfiguration.getSyndTemplate();
         Set<String> tags = Optional.ofNullable(rssConfiguration.getActiveTags())
