@@ -8,6 +8,7 @@ import com.company.nikas.system.ActiveStreamMonitor;
 import com.company.nikas.system.processing.impl.RomeRssProcessor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.impl.client.HttpClients;
 
 import java.io.File;
 import java.io.IOException;
@@ -75,7 +76,7 @@ public class InputController {
     private void prepareFeedSubscriptions() {
         AppConfiguration.getRssFeeds().entrySet().parallelStream().forEach(entry -> {
             RssConfiguration rssConfiguration = entry.getValue();
-            Runnable rssTest = new ApacheRssReader(entry.getKey());
+            Runnable rssTest = new ApacheRssReader(entry.getKey(), HttpClients.createDefault());
             if (isNull(rssConfiguration.getLastUpdateDate())) {
                 rssConfiguration.setLastUpdateDate(LocalDateTime.now());
             }
@@ -182,7 +183,7 @@ public class InputController {
             rssConfiguration.setRequestPeriod(delay);
             rssConfiguration.setUrl(url);
             AppConfiguration.getRssFeeds().put(feedName, rssConfiguration);
-            Runnable task = new ApacheRssReader(feedName);
+            Runnable task = new ApacheRssReader(feedName, HttpClients.createDefault());
             executionSchedule.put(feedName,
                     timer.scheduleAtFixedRate(task, 0, rssConfiguration.getRequestPeriod(), TimeUnit.MILLISECONDS));
             log.info("Feed {} was succesfully added", feedName);
@@ -206,7 +207,8 @@ public class InputController {
                     long delay = input.nextLong();
                     rssConfiguration.setRequestPeriod(delay);
                     executionSchedule.get(feedName).cancel(false);
-                    timer.scheduleAtFixedRate(new ApacheRssReader(feedName), 0, delay, TimeUnit.MILLISECONDS);
+                    timer.scheduleAtFixedRate(new ApacheRssReader(feedName, HttpClients.createDefault()),
+                            0, delay, TimeUnit.MILLISECONDS);
                     break;
                 }
                 case ("tags") : {

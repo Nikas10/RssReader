@@ -12,7 +12,6 @@ import org.apache.http.HttpStatus;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
 
 import java.io.IOException;
@@ -27,12 +26,15 @@ public class ApacheRssReader implements RssReader, Runnable {
 
     private Map<String, String> activeConnections;
     private Map<String, RssConfiguration> rssFeeds;
+    private CloseableHttpClient httpClient;
+
     private String requiredRss;
 
-    public ApacheRssReader(String requiredRss) {
+    public ApacheRssReader(String requiredRss, CloseableHttpClient client) {
         this.activeConnections = AppConfiguration.getActiveConnections();
         this.rssFeeds = AppConfiguration.getRssFeeds();
         this.requiredRss = requiredRss;
+        this.httpClient = client;
     }
 
     @Override
@@ -67,9 +69,8 @@ public class ApacheRssReader implements RssReader, Runnable {
 
     private CloseableHttpResponse initiateConnection(String url) {
         try {
-            CloseableHttpClient httpclient = HttpClients.createDefault();
             HttpGet httpGet = new HttpGet(url);
-            return httpclient.execute(httpGet);
+            return httpClient.execute(httpGet);
         } catch (IOException e) {
             log.error("An error occured during executing Http request, {}", e);
             return null;

@@ -38,9 +38,4 @@ public class AppConfiguration implements Serializable {
 
     public static void setSyndTemplate(Map<String, String> template) { syndTemplate = template; }
 
-    public AppConfiguration() {
-        rssFeeds = new ConcurrentHashMap<>();
-        activeConnections = new ConcurrentHashMap<>();
-    }
-
 }
