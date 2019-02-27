@@ -19,6 +19,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.util.Objects.isNull;
 
@@ -63,7 +64,7 @@ public class InputController {
      */
     private void launchConnectionMonitor() {
         monitor = new Thread(new ActiveStreamMonitor(
-                new RomeRssProcessor()));
+                RomeRssProcessor.class));
         monitor.start();
     }
 
@@ -224,6 +225,12 @@ public class InputController {
             String file = "./" + url.trim()
                     .replace("\\/\\/:", "/")
                     .replaceAll("[;:*?\"<>|&']", "/");
+
+            System.out.println("Enter tags to parse: ");
+            String tags = input.nextLine();
+            rssConfiguration.setActiveTags(Stream.of(tags.trim().split(",")).filter(entry ->
+                AppConfiguration.getSyndTemplate().containsKey(entry)
+            ).collect(Collectors.toSet()));
 
             rssConfiguration.setElementsPerRequest(limit);
             rssConfiguration.setFilePath(file);

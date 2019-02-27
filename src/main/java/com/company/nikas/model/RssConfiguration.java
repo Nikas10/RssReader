@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Set;
 
 /**
@@ -20,6 +21,8 @@ public class RssConfiguration implements Serializable {
     private Long requestPeriod;
     /** Feed data last fetch date*/
     private LocalDateTime lastUpdateDate;
+    /** Feed's last updated date*/
+    private Date lastUpdatedFeedDate = null;
     /** Number of feed entries to be written to file per request*/
     private Integer elementsPerRequest;
     /** Tags, that will be parsed and written to a file*/

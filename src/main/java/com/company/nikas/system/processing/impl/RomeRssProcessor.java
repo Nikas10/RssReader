@@ -4,6 +4,7 @@ import com.company.nikas.config.AppConfiguration;
 import com.company.nikas.exceptions.RssParserException;
 import com.company.nikas.model.RssConfiguration;
 import com.company.nikas.system.processing.RssProcessor;
+import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.FeedException;
 import com.rometools.rome.io.SyndFeedInput;
@@ -14,6 +15,8 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.stream.Collectors;
+
+import static java.util.Objects.isNull;
 
 
 /**
@@ -50,7 +53,15 @@ public class RomeRssProcessor implements RssProcessor {
      */
     private List<Map<String, Object>> buildMappedRss(SyndFeed feed) {
         Map<String, String> allowedTags = filterTemplate();
-        List list = feed.getEntries();
+        List<SyndEntry> list = feed.getEntries().stream()
+                .filter(e -> (!isNull(e.getPublishedDate())) &&
+                        ((isNull(rssConfiguration.getLastUpdatedFeedDate())
+                    || e.getPublishedDate().compareTo(rssConfiguration.getLastUpdatedFeedDate()) > 0))
+        ).collect(Collectors.toList());
+        if (list.isEmpty()) return parseResult;
+        rssConfiguration.setLastUpdatedFeedDate(Collections.max(list.stream()
+                    .map(SyndEntry::getPublishedDate).collect(Collectors.toList())));
+
         Integer entryLimit = Optional.ofNullable(rssConfiguration.getElementsPerRequest())
                 .orElse(list.size());
         if (entryLimit > list.size() || entryLimit < 1) {

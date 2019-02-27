@@ -27,7 +27,7 @@ public class ActiveStreamMonitorTest {
 
     private static ObjectMapper objectMapper = new ObjectMapperPreparer().produceInstance();
     private static String rss;
-    private static RssConfiguration rssConfiguration;
+    private RssConfiguration rssConfiguration;
 
 
     @Rule
@@ -35,21 +35,21 @@ public class ActiveStreamMonitorTest {
 
     @BeforeClass
     public static void getData() throws IOException {
-        rssConfiguration = new RssConfiguration();
         AppConfiguration.setSyndTemplate(objectMapper.convertValue(
                 objectMapper.readTree(InputController.class.
                         getResourceAsStream("/templates/synd-template.json"))
                 , Map.class));
     }
 
-    @AfterClass
-    public static void cleanData() {
+    @After
+    public void cleanData() {
         File file = new File(rssConfiguration.getFilePath());
         file.delete();
     }
 
     @Before
     public void init() throws IOException {
+        rssConfiguration = new RssConfiguration();
         rss = IOUtils.toString(this.getClass().getResource("/rss-dump.xml"), StandardCharsets.UTF_8);
         setDefaultParameters(rssConfiguration);
         AppConfiguration.setRssFeeds(new ConcurrentHashMap<>());
@@ -81,6 +81,8 @@ public class ActiveStreamMonitorTest {
     @Test
     public void testWriteToFileMultiple() throws InterruptedException, IOException{
         pushFeed("feed 1");
+        rssConfiguration = new RssConfiguration();
+        setDefaultParameters(rssConfiguration);
         pushFeed("feed 2");
         handleThread();
         File file = new File(rssConfiguration.getFilePath());
@@ -108,7 +110,7 @@ public class ActiveStreamMonitorTest {
 
     private void handleThread() throws InterruptedException {
         Thread monitor = new Thread(new ActiveStreamMonitor(
-                new RomeRssProcessor()));
+                RomeRssProcessor.class));
         monitor.start();
         Thread.sleep(5000);
         monitor.interrupt();
@@ -132,6 +134,7 @@ public class ActiveStreamMonitorTest {
         rssConfiguration.setUrl("some url");
         rssConfiguration.setRequestPeriod(1000L);
         rssConfiguration.setLastUpdateDate(LocalDateTime.now());
+        rssConfiguration.setLastUpdatedFeedDate(null);
         rssConfiguration.setFilePath("./testFile.txt");
         rssConfiguration.setElementsPerRequest(1);
         Set<String> tags = new HashSet<>();

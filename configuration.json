@@ -5,6 +5,6 @@
     "requestPeriod" : 8000,
     "lastUpdateDate" : "2019-02-26T13:27:55.761",
     "elementsPerRequest" : 5,
-    "activeTags" : [ "authors" ]
+    "activeTags" : [ "authors", "published" ]
   }
 }
