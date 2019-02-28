@@ -1,18 +1,24 @@
 package com.company.nikas.system.processing.impl;
 
 import com.company.nikas.config.AppConfiguration;
+import com.company.nikas.config.ObjectMapperPreparer;
 import com.company.nikas.exceptions.RssParserException;
 import com.company.nikas.model.RssConfiguration;
 import com.company.nikas.system.processing.RssProcessor;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.FeedException;
 import com.rometools.rome.io.SyndFeedInput;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.StringReader;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,8 +33,10 @@ public class RomeRssProcessor implements RssProcessor {
 
     private RssConfiguration rssConfiguration;
     private List<Map<String, Object>> parseResult;
+    private ObjectMapper objectMapper;
 
     public RomeRssProcessor() {
+        objectMapper = new ObjectMapperPreparer().produceInstance();
     }
 
     @Override
@@ -81,6 +89,23 @@ public class RomeRssProcessor implements RssProcessor {
             parseResult.add(parsedEntry);
         }
         return parseResult;
+    }
+
+    /**
+     * Writes parsed feed data to a file.
+     * @param feed Feed name
+     * @param file File object, representing file to write to
+     * @param content Mapped feed content
+     * @throws IOException in case writing to file was unsuccessful.
+     */
+    @Override
+    public synchronized void writeToFile(String feed, File file, Map<String, Object> content)
+            throws IOException {
+        Files.write(file.toPath(),("\n" + new Date().toString() + ", feed: " + feed + "\n").getBytes(),
+                StandardOpenOption.APPEND);
+        Files.write(file.toPath(),
+                objectMapper.writeValueAsBytes(content),
+                StandardOpenOption.APPEND);
     }
 
     /**

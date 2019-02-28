@@ -231,15 +231,21 @@ public class InputController {
             rssConfiguration.setActiveTags(Stream.of(tags.trim().split(",")).filter(entry ->
                 AppConfiguration.getSyndTemplate().containsKey(entry)
             ).collect(Collectors.toSet()));
-
             rssConfiguration.setElementsPerRequest(limit);
             rssConfiguration.setFilePath(file);
             rssConfiguration.setRequestPeriod(delay);
             rssConfiguration.setUrl(url);
             AppConfiguration.getRssFeeds().put(feedName, rssConfiguration);
-            Runnable task = new ApacheRssReader(feedName, HttpClients.createDefault());
+            ApacheRssReader reader = new ApacheRssReader(feedName, HttpClients.createDefault());
+            String initialData = reader.getRssFeed(rssConfiguration.getUrl());
+            if (!(initialData.contains("entry") && initialData.contains("item"))) {
+                log.error("Feed with name {} is invalid!", feedName);
+                return;
+            }
+            Runnable task = reader;
             executionSchedule.put(feedName,
-                    timer.scheduleAtFixedRate(task, 0, rssConfiguration.getRequestPeriod(), TimeUnit.MILLISECONDS));
+                    timer.scheduleAtFixedRate(task, rssConfiguration.getRequestPeriod(),
+                            rssConfiguration.getRequestPeriod(), TimeUnit.MILLISECONDS));
             log.info("Feed {} was succesfully added", feedName);
         } else {
             log.error("Feed with name {} already exists!", feedName);

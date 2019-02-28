@@ -2,6 +2,8 @@ package com.company.nikas.system.processing;
 
 import com.company.nikas.exceptions.RssParserException;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -20,5 +22,15 @@ public interface RssProcessor {
      */
     List<Map<String, Object>> parseFeed(String feedId, String content)
             throws RssParserException;
+
+    /**
+     * Writes parsed feed data to a file.
+     * @param feed Feed name
+     * @param file File object, representing file to write to
+     * @param content Mapped feed content
+     * @throws IOException in case writing to file was unsuccessful.
+     */
+    public void writeToFile(String feed, File file, Map<String, Object> content)
+            throws IOException;
 
 }
